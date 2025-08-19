@@ -155,20 +155,25 @@ export const getProducts = async (req, res) => {
     }
 };
 
-// Get a single product by ID
+// Get a single product by ID or name
 export const getProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid product ID"
+        let product;
+
+        // Check if it's a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            // Search by ID
+            product = await Product.findOne({ _id: id, userId });
+        } else {
+            // Search by name (case-insensitive)
+            product = await Product.findOne({ 
+                name: { $regex: new RegExp(id, 'i') }, 
+                userId 
             });
         }
-
-        const product = await Product.findOne({ _id: id, userId });
 
         if (!product) {
             return res.status(404).json({
@@ -191,22 +196,32 @@ export const getProduct = async (req, res) => {
     }
 };
 
-// Update a product
+// Update a product by ID or name
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
         const updates = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid product ID"
+        let existingProduct;
+        let productId;
+
+        // Check if it's a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            // Search by ID
+            existingProduct = await Product.findOne({ _id: id, userId });
+            productId = id;
+        } else {
+            // Search by name (case-insensitive)
+            existingProduct = await Product.findOne({ 
+                name: { $regex: new RegExp(id, 'i') }, 
+                userId 
             });
+            if (existingProduct) {
+                productId = existingProduct._id;
+            }
         }
 
-        // Get existing product for photo handling
-        const existingProduct = await Product.findOne({ _id: id, userId });
         if (!existingProduct) {
             return res.status(404).json({
                 success: false,
@@ -248,7 +263,7 @@ export const updateProduct = async (req, res) => {
         }
 
         const product = await Product.findOneAndUpdate(
-            { _id: id, userId },
+            { _id: productId, userId },
             updates,
             { new: true, runValidators: true }
         );
@@ -276,20 +291,25 @@ export const updateProduct = async (req, res) => {
     }
 };
 
-// Delete a product
+// Delete a product by ID or name
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid product ID"
+        let product;
+
+        // Check if it's a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            // Delete by ID
+            product = await Product.findOneAndDelete({ _id: id, userId });
+        } else {
+            // Delete by name (case-insensitive)
+            product = await Product.findOneAndDelete({ 
+                name: { $regex: new RegExp(id, 'i') }, 
+                userId 
             });
         }
-
-        const product = await Product.findOneAndDelete({ _id: id, userId });
 
         if (!product) {
             return res.status(404).json({
@@ -324,19 +344,12 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-// Update stock quantity (for sales/restocking)
+// Update stock quantity (for sales/restocking) by ID or name
 export const updateStock = async (req, res) => {
     try {
         const { id } = req.params;
         const { type, quantity, reason } = req.body;
         const userId = req.user.id;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid product ID"
-            });
-        }
 
         if (!type || !quantity || !['sale', 'restock', 'adjustment'].includes(type)) {
             return res.status(400).json({
@@ -345,7 +358,19 @@ export const updateStock = async (req, res) => {
             });
         }
 
-        const product = await Product.findOne({ _id: id, userId });
+        let product;
+
+        // Check if it's a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            // Find by ID
+            product = await Product.findOne({ _id: id, userId });
+        } else {
+            // Find by name (case-insensitive)
+            product = await Product.findOne({ 
+                name: { $regex: new RegExp(id, 'i') }, 
+                userId 
+            });
+        }
 
         if (!product) {
             return res.status(404).json({

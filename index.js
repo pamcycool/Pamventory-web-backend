@@ -15,7 +15,8 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://localhost:3000", // Local development
-    "https://your-frontend-domain.com" // Production (replace with actual domain)
+    "https://your-frontend-domain.com",
+    "*" // Production (replace with actual domain)
   ],
   credentials: true,
   optionSuccessStatus: 200,
@@ -55,7 +56,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
     
-    const PORT = process.env.PORT || 5001;
+    const PORT = process.env.PORT || 5002;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
