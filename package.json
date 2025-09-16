@@ -9,7 +9,6 @@
     "migrate": "node scripts/migrateExistingUsers.js",
     "migrate-storeless": "node scripts/migrateStorelessData.js",
     "migrate-store-based": "node scripts/migrateToStoreBased.js",
-    "vercel-build": "npm install --legacy-peer-deps && npm run build"
   },
   "keywords": [],
   "author": "",
