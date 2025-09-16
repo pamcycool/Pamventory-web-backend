@@ -8,7 +8,7 @@
     "start": "nodemon index.js",
     "migrate": "node scripts/migrateExistingUsers.js",
     "migrate-storeless": "node scripts/migrateStorelessData.js",
-    "migrate-store-based": "node scripts/migrateToStoreBased.js",
+    "migrate-store-based": "node scripts/migrateToStoreBased.js"
   },
   "keywords": [],
   "author": "",
