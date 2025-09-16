@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 // Email transporter configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: "mail.pamventory.com", // mail server (from cPanel)
+    host: "pamventory.com", // mail server (from cPanel)
     port: 465,                         // SSL
     secure: true,                      // true for 465, false for 587
     auth: {
@@ -110,11 +110,12 @@ export const signUp = async (req, res) => {
 
     // Generate verification OTP
     const verificationOTP = user.generateVerificationOTP();
-    await user.save();
+    
 
     // Send verification email
     try {
       await sendVerificationEmail(user, verificationOTP);
+      await user.save();
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       // Continue with registration even if email fails
