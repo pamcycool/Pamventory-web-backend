@@ -7,20 +7,18 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js";
 import creditRoutes from "./routes/creditRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
+import storeRoutes from "./routes/storeRoutes.js";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const corsOptions = {
-  origin: [
-    "http://localhost:3000", // Local development
-    "https://your-frontend-domain.com",
-    "*" // Production (replace with actual domain)
-  ],
+  origin: "*",
   credentials: true,
   optionSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
 
 // Conditional JSON parsing - skip multipart requests
@@ -41,6 +39,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/stores", storeRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/credit", creditRoutes);
@@ -56,7 +55,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
     
-    const PORT = process.env.PORT || 5002;
+    const PORT = process.env.PORT || 5001;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

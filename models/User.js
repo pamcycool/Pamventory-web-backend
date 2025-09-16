@@ -81,7 +81,15 @@ const userSchema = new mongoose.Schema({
       date.setMonth(date.getMonth() + 2); // 2 months trial
       return date;
     }
-  }
+  },
+  activeStoreId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Store"
+  },
+  stores: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Store"
+  }]
 }, {
   timestamps: true
 });

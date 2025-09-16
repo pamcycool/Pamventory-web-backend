@@ -26,10 +26,10 @@ const saleSchema = new mongoose.Schema({
         required: [true, "Total price is required"],
         min: [0, "Total price cannot be negative"]
     },
-    userId: {
+    storeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "User ID is required"]
+        ref: "Store",
+        required: [true, "Store ID is required"]
     },
     saleDate: {
         type: Date,
@@ -60,10 +60,10 @@ const saleSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-saleSchema.index({ userId: 1, saleDate: -1 });
-saleSchema.index({ userId: 1, productId: 1 });
-saleSchema.index({ userId: 1, productName: 1 });
-saleSchema.index({ userId: 1, totalPrice: -1 });
+saleSchema.index({ storeId: 1, saleDate: -1 });
+saleSchema.index({ storeId: 1, productId: 1 });
+saleSchema.index({ storeId: 1, productName: 1 });
+saleSchema.index({ storeId: 1, totalPrice: -1 });
 
 // Virtual for formatted date
 saleSchema.virtual('formattedDate').get(function() {
@@ -77,9 +77,9 @@ saleSchema.virtual('formattedDate').get(function() {
     });
 });
 
-// Static method to get sales statistics for a user
-saleSchema.statics.getSalesStats = function(userId, startDate, endDate) {
-    const matchQuery = { userId: new mongoose.Types.ObjectId(userId) };
+// Static method to get sales statistics for a store
+saleSchema.statics.getSalesStats = function(storeId, startDate, endDate) {
+    const matchQuery = { storeId: new mongoose.Types.ObjectId(storeId) };
     
     if (startDate || endDate) {
         matchQuery.saleDate = {};
@@ -102,9 +102,9 @@ saleSchema.statics.getSalesStats = function(userId, startDate, endDate) {
 };
 
 // Static method to get top selling products
-saleSchema.statics.getTopSellingProducts = function(userId, limit = 10) {
+saleSchema.statics.getTopSellingProducts = function(storeId, limit = 10) {
     return this.aggregate([
-        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+        { $match: { storeId: new mongoose.Types.ObjectId(storeId) } },
         {
             $group: {
                 _id: "$productId",

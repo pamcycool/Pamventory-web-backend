@@ -15,6 +15,7 @@ import {
 } from "../controllers/creditController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { checkSubscription } from "../middlewares/subscriptionMiddleware.js";
+import { validateStoreAccess } from "../middlewares/storeMiddleware.js";
 
 const router = express.Router();
 
@@ -23,6 +24,9 @@ router.use(protect);
 
 // Apply subscription check to all routes
 router.use(checkSubscription);
+
+// Apply store access middleware to all routes
+router.use(validateStoreAccess);
 
 // Customer routes
 router.get("/customers", getCustomers);

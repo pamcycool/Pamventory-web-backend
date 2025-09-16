@@ -10,6 +10,7 @@ import {
 } from "../controllers/salesController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { checkSubscription } from "../middlewares/subscriptionMiddleware.js";
+import { validateStoreAccess } from "../middlewares/storeMiddleware.js";
 
 const router = express.Router();
 
@@ -18,6 +19,9 @@ router.use(protect);
 
 // All routes require active subscription
 router.use(checkSubscription);
+
+// All routes require active store
+router.use(validateStoreAccess);
 
 // Sales CRUD routes
 router.post("/", createSale);

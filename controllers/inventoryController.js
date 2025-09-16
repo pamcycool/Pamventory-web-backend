@@ -6,7 +6,7 @@ import { deleteImage, extractPublicId } from "../config/cloudinary.js";
 export const createProduct = async (req, res) => {
     try {
         const { name, price, initialQuantity, restockLevel, category, description, sku } = req.body;
-        const userId = req.user.id;
+        const storeId = req.storeId; // Get storeId from middleware
 
         // Validate required fields
         if (!name || !price || !initialQuantity || !restockLevel) {
@@ -16,13 +16,13 @@ export const createProduct = async (req, res) => {
             });
         }
 
-        // Check if SKU already exists (if provided)
+        // Check if SKU already exists in the same store (if provided)
         if (sku) {
-            const existingSku = await Product.findOne({ sku });
+            const existingSku = await Product.findOne({ sku, storeId });
             if (existingSku) {
                 return res.status(400).json({
                     success: false,
-                    message: "SKU already exists"
+                    message: "SKU already exists in this store"
                 });
             }
         }
@@ -41,7 +41,7 @@ export const createProduct = async (req, res) => {
             description,
             sku,
             photo: photoUrl,
-            userId
+            storeId
         });
 
         await product.save();
@@ -69,10 +69,10 @@ export const createProduct = async (req, res) => {
     }
 };
 
-// Get all products for a user
+// Get all products for a store
 export const getProducts = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId; // Get storeId from middleware
         const { 
             page = 1, 
             limit = 10, 
@@ -84,7 +84,7 @@ export const getProducts = async (req, res) => {
         } = req.query;
 
         // Build query
-        const query = { userId };
+        const query = { storeId };
 
         // Add search filter
         if (search) {
@@ -159,19 +159,19 @@ export const getProducts = async (req, res) => {
 export const getProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         let product;
 
         // Check if it's a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(id)) {
             // Search by ID
-            product = await Product.findOne({ _id: id, userId });
+            product = await Product.findOne({ _id: id, storeId });
         } else {
             // Search by name (case-insensitive)
             product = await Product.findOne({ 
                 name: { $regex: new RegExp(id, 'i') }, 
-                userId 
+                storeId 
             });
         }
 
@@ -200,7 +200,7 @@ export const getProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
         const updates = req.body;
 
         let existingProduct;
@@ -209,13 +209,13 @@ export const updateProduct = async (req, res) => {
         // Check if it's a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(id)) {
             // Search by ID
-            existingProduct = await Product.findOne({ _id: id, userId });
+            existingProduct = await Product.findOne({ _id: id, storeId });
             productId = id;
         } else {
             // Search by name (case-insensitive)
             existingProduct = await Product.findOne({ 
                 name: { $regex: new RegExp(id, 'i') }, 
-                userId 
+                storeId 
             });
             if (existingProduct) {
                 productId = existingProduct._id;
@@ -246,7 +246,7 @@ export const updateProduct = async (req, res) => {
         }
 
         // Remove fields that shouldn't be updated directly
-        delete updates.userId;
+        delete updates.storeId;
         delete updates.totalSold;
         delete updates.createdAt;
         delete updates.updatedAt;
@@ -263,7 +263,7 @@ export const updateProduct = async (req, res) => {
         }
 
         const product = await Product.findOneAndUpdate(
-            { _id: productId, userId },
+            { _id: productId, storeId },
             updates,
             { new: true, runValidators: true }
         );
@@ -295,19 +295,19 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         let product;
 
         // Check if it's a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(id)) {
             // Delete by ID
-            product = await Product.findOneAndDelete({ _id: id, userId });
+            product = await Product.findOneAndDelete({ _id: id, storeId });
         } else {
             // Delete by name (case-insensitive)
             product = await Product.findOneAndDelete({ 
                 name: { $regex: new RegExp(id, 'i') }, 
-                userId 
+                storeId 
             });
         }
 
@@ -349,7 +349,7 @@ export const updateStock = async (req, res) => {
     try {
         const { id } = req.params;
         const { type, quantity, reason } = req.body;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         if (!type || !quantity || !['sale', 'restock', 'adjustment'].includes(type)) {
             return res.status(400).json({
@@ -363,12 +363,12 @@ export const updateStock = async (req, res) => {
         // Check if it's a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(id)) {
             // Find by ID
-            product = await Product.findOne({ _id: id, userId });
+            product = await Product.findOne({ _id: id, storeId });
         } else {
             // Find by name (case-insensitive)
             product = await Product.findOne({ 
                 name: { $regex: new RegExp(id, 'i') }, 
-                userId 
+                storeId 
             });
         }
 
@@ -420,10 +420,10 @@ export const updateStock = async (req, res) => {
 // Get inventory statistics
 export const getInventoryStats = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         const stats = await Product.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            { $match: { storeId: new mongoose.Types.ObjectId(storeId) } },
             {
                 $group: {
                     _id: null,
@@ -469,9 +469,9 @@ export const getInventoryStats = async (req, res) => {
 // Get low stock alerts
 export const getLowStockAlerts = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
-        const lowStockProducts = await Product.getLowStockProducts(userId);
+        const lowStockProducts = await Product.getLowStockProducts(storeId);
 
         res.status(200).json({
             success: true,
@@ -491,9 +491,9 @@ export const getLowStockAlerts = async (req, res) => {
 // Get product categories
 export const getCategories = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
-        const categories = await Product.distinct('category', { userId });
+        const categories = await Product.distinct('category', { storeId });
 
         res.status(200).json({
             success: true,

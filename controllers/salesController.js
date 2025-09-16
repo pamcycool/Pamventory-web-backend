@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 export const createSale = async (req, res) => {
     try {
         const { productId, quantity, unitPrice, paymentMethod, customerName, notes } = req.body;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         // Validate required fields
         if (!productId || !quantity || !unitPrice) {
@@ -23,8 +23,8 @@ export const createSale = async (req, res) => {
             });
         }
 
-        // Find the product and verify it belongs to the user
-        const product = await Product.findOne({ _id: productId, userId });
+        // Find the product and verify it belongs to the store
+        const product = await Product.findOne({ _id: productId, storeId });
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -50,7 +50,7 @@ export const createSale = async (req, res) => {
             quantity,
             unitPrice,
             totalPrice,
-            userId,
+            storeId,
             category: product.category,
             paymentMethod: paymentMethod || "cash",
             customerName,
@@ -85,7 +85,7 @@ export const createSale = async (req, res) => {
 // Get all sales with filtering and sorting
 export const getSales = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
         const {
             page = 1,
             limit = 10,
@@ -102,7 +102,7 @@ export const getSales = async (req, res) => {
         } = req.query;
 
         // Build query object
-        const query = { userId };
+        const query = { storeId };
 
         // Search functionality
         if (search) {
@@ -194,7 +194,7 @@ export const getSales = async (req, res) => {
 export const getSale = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -203,7 +203,7 @@ export const getSale = async (req, res) => {
             });
         }
 
-        const sale = await Sale.findOne({ _id: id, userId })
+        const sale = await Sale.findOne({ _id: id, storeId })
             .populate('productId', 'name category photo sku description');
 
         if (!sale) {
@@ -232,7 +232,7 @@ export const getSale = async (req, res) => {
 export const updateSale = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
         const { customerName, notes, paymentMethod } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -242,7 +242,7 @@ export const updateSale = async (req, res) => {
             });
         }
 
-        const sale = await Sale.findOne({ _id: id, userId });
+        const sale = await Sale.findOne({ _id: id, storeId });
 
         if (!sale) {
             return res.status(404).json({
@@ -283,7 +283,7 @@ export const updateSale = async (req, res) => {
 export const deleteSale = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -332,14 +332,14 @@ export const deleteSale = async (req, res) => {
 // Get sales statistics
 export const getSalesStats = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
         const { startDate, endDate, period = "month" } = req.query;
 
         // Get overall stats
-        const stats = await Sale.getSalesStats(userId, startDate, endDate);
+        const stats = await Sale.getSalesStats(storeId, startDate, endDate);
         
         // Build date filter for aggregations
-        const dateFilter = { userId: new mongoose.Types.ObjectId(userId) };
+        const dateFilter = { storeId: new mongoose.Types.ObjectId(storeId) };
         if (startDate || endDate) {
             dateFilter.saleDate = {};
             if (startDate) dateFilter.saleDate.$gte = new Date(startDate);
@@ -426,16 +426,16 @@ export const getSalesStats = async (req, res) => {
 // Get available filter options
 export const getFilterOptions = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const storeId = req.storeId;
 
-        // Get unique categories from user's sales
-        const categories = await Sale.distinct('category', { userId });
+        // Get unique categories from store's sales
+        const categories = await Sale.distinct('category', { storeId });
         
-        // Get unique payment methods from user's sales
-        const paymentMethods = await Sale.distinct('paymentMethod', { userId });
+        // Get unique payment methods from store's sales
+        const paymentMethods = await Sale.distinct('paymentMethod', { storeId });
         
-        // Get unique product names from user's sales
-        const productNames = await Sale.distinct('productName', { userId });
+        // Get unique product names from store's sales
+        const productNames = await Sale.distinct('productName', { storeId });
 
         res.status(200).json({
             success: true,

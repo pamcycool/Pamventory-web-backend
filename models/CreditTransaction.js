@@ -7,9 +7,9 @@ const creditTransactionSchema = new mongoose.Schema(
       ref: "Customer",
       required: [true, "Customer ID is required"],
     },
-    userId: {
+    storeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Store",
       required: true,
     },
     type: {
@@ -53,7 +53,7 @@ const creditTransactionSchema = new mongoose.Schema(
 
 // Index for faster queries
 creditTransactionSchema.index({ customerId: 1, createdAt: -1 });
-creditTransactionSchema.index({ userId: 1, createdAt: -1 });
+creditTransactionSchema.index({ storeId: 1, createdAt: -1 });
 creditTransactionSchema.index({ dueDate: 1, type: 1 });
 
 // Generate unique reference before saving
@@ -108,22 +108,22 @@ creditTransactionSchema.statics.getCustomerStatistics = async function(customerI
   };
 };
 
-// Static method to get overdue transactions for a user
-creditTransactionSchema.statics.getOverdueTransactions = async function(userId) {
+// Static method to get overdue transactions for a store
+creditTransactionSchema.statics.getOverdueTransactions = async function(storeId) {
   return this.find({
-    userId: new mongoose.Types.ObjectId(userId),
+    storeId: new mongoose.Types.ObjectId(storeId),
     type: 'credit-given',
     status: 'pending',
     dueDate: { $lt: new Date() }
   }).populate('customerId');
 };
 
-// Static method to get transactions summary for a user
-creditTransactionSchema.statics.getUserSummary = async function(userId) {
+// Static method to get transactions summary for a store
+creditTransactionSchema.statics.getStoreSummary = async function(storeId) {
   const summary = await this.aggregate([
     {
       $match: { 
-        userId: new mongoose.Types.ObjectId(userId),
+        storeId: new mongoose.Types.ObjectId(storeId),
         status: { $ne: "cancelled" }
       }
     },

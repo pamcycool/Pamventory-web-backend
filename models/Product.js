@@ -36,10 +36,10 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    userId: {
+    storeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "User ID is required"]
+        ref: "Store",
+        required: [true, "Store ID is required"]
     },
     category: {
         type: String,
@@ -93,10 +93,10 @@ productSchema.methods.restockProduct = function(quantity) {
     return this.save();
 };
 
-// Static method to get low stock products for a user
-productSchema.statics.getLowStockProducts = function(userId) {
+// Static method to get low stock products for a store
+productSchema.statics.getLowStockProducts = function(storeId) {
     return this.find({ 
-        userId: userId, 
+        storeId: storeId, 
         isLowStock: true 
     }).sort({ currentQuantity: 1 });
 };
@@ -113,9 +113,9 @@ productSchema.virtual('stockStatus').get(function() {
 });
 
 // Index for better query performance
-productSchema.index({ userId: 1, name: 1 });
-productSchema.index({ userId: 1, isLowStock: 1 });
-productSchema.index({ userId: 1, currentQuantity: 1 });
+productSchema.index({ storeId: 1, name: 1 });
+productSchema.index({ storeId: 1, isLowStock: 1 });
+productSchema.index({ storeId: 1, currentQuantity: 1 });
 
 const Product = mongoose.model("Product", productSchema);
 

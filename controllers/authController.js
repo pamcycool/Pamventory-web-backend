@@ -5,10 +5,12 @@ import nodemailer from 'nodemailer';
 // Email transporter configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: "pamventory.com", // mail server (from cPanel)
+    port: 465,                         // SSL
+    secure: true,                      // true for 465, false for 587
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: process.env.EMAIL_USER,    // e.g. "no-reply@herdomain.com"
+      pass: process.env.EMAIL_PASS     // email account password
     }
   });
 };
@@ -478,7 +480,11 @@ export const resetPassword = async (req, res) => {
 // Get current user (protected route)
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('activeStoreId')
+      .populate('stores');
+      
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -492,7 +498,9 @@ export const getCurrentUser = async (req, res) => {
         role: user.role,
         lastLogin: user.lastLogin,
         createdAt: user.createdAt,
-        phone: user.phone
+        phone: user.phone,
+        activeStoreId: user.activeStoreId,
+        stores: user.stores
       }
     });
   } catch (error) {

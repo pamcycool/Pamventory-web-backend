@@ -17,9 +17,9 @@ const customerSchema = new mongoose.Schema(
       required: [true, "Address is required"],
       trim: true,
     },
-    userId: {
+    storeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Store",
       required: true,
     },
     totalCredit: {
@@ -45,8 +45,8 @@ const customerSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-customerSchema.index({ userId: 1, name: 1 });
-customerSchema.index({ userId: 1, phone: 1 });
+customerSchema.index({ storeId: 1, name: 1 });
+customerSchema.index({ storeId: 1, phone: 1 });
 
 // Virtual for outstanding amount
 customerSchema.virtual('outstandingAmount').get(function() {
@@ -59,11 +59,11 @@ customerSchema.methods.updateBalances = function() {
   return this.save();
 };
 
-// Static method to get customer statistics for a user
-customerSchema.statics.getStatistics = async function(userId) {
+// Static method to get customer statistics for a store
+customerSchema.statics.getStatistics = async function(storeId) {
   const stats = await this.aggregate([
     {
-      $match: { userId: new mongoose.Types.ObjectId(userId), isActive: true }
+      $match: { storeId: new mongoose.Types.ObjectId(storeId), isActive: true }
     },
     {
       $group: {

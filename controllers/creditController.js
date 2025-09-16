@@ -8,9 +8,9 @@ import mongoose from "mongoose";
 export const getCustomers = async (req, res) => {
   try {
     const { search, page = 1, limit = 10 } = req.query;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    let query = { userId, isActive: true };
+    let query = { storeId, isActive: true };
 
     // Add search functionality
     if (search) {
@@ -57,9 +57,9 @@ export const getCustomers = async (req, res) => {
 // Get customer statistics
 export const getCustomerStatistics = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const storeId = req.storeId;
     
-    const stats = await Customer.getStatistics(userId);
+    const stats = await Customer.getStatistics(storeId);
     
     res.status(200).json({
       success: true,
@@ -79,9 +79,9 @@ export const getCustomerStatistics = async (req, res) => {
 export const getCustomer = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    const customer = await Customer.findOne({ _id: id, userId, isActive: true });
+    const customer = await Customer.findOne({ _id: id, storeId, isActive: true });
 
     if (!customer) {
       return res.status(404).json({
@@ -123,11 +123,11 @@ export const getCustomer = async (req, res) => {
 export const createCustomer = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    // Check if customer with same phone exists for this user
+    // Check if customer with same phone exists for this store
     const existingCustomer = await Customer.findOne({ 
-      userId, 
+      storeId, 
       phone, 
       isActive: true 
     });
@@ -143,7 +143,7 @@ export const createCustomer = async (req, res) => {
       name,
       phone,
       address,
-      userId
+      storeId
     });
 
     await customer.save();
@@ -168,12 +168,12 @@ export const updateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, phone, address } = req.body;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    // Check if customer with same phone exists for this user (excluding current customer)
+    // Check if customer with same phone exists for this store (excluding current customer)
     if (phone) {
       const existingCustomer = await Customer.findOne({ 
-        userId, 
+        storeId, 
         phone, 
         _id: { $ne: id },
         isActive: true 
@@ -188,7 +188,7 @@ export const updateCustomer = async (req, res) => {
     }
 
     const customer = await Customer.findOneAndUpdate(
-      { _id: id, userId, isActive: true },
+      { _id: id, storeId, isActive: true },
       { name, phone, address },
       { new: true, runValidators: true }
     );
@@ -255,12 +255,12 @@ export const getCustomerTransactions = async (req, res) => {
   try {
     const { customerId } = req.params;
     const { page = 1, limit = 10, type } = req.query;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    // Verify customer belongs to user
+    // Verify customer belongs to store
     const customer = await Customer.findOne({ 
       _id: customerId, 
-      userId, 
+      storeId, 
       isActive: true 
     });
 
@@ -318,12 +318,12 @@ export const createTransaction = async (req, res) => {
 
   try {
     const { customerId, type, amount, description, dueDate } = req.body;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
-    // Verify customer belongs to user
+    // Verify customer belongs to store
     const customer = await Customer.findOne({ 
       _id: customerId, 
-      userId, 
+      storeId, 
       isActive: true 
     }).session(session);
 
@@ -338,7 +338,7 @@ export const createTransaction = async (req, res) => {
     // Create transaction
     const transaction = new CreditTransaction({
       customerId,
-      userId,
+      storeId,
       type,
       amount: parseFloat(amount),
       description,
@@ -456,11 +456,11 @@ export const deleteTransaction = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
     const transaction = await CreditTransaction.findOne({ 
       _id: id, 
-      userId,
+      storeId,
       status: 'pending'
     }).session(session);
 
@@ -511,10 +511,10 @@ export const deleteTransaction = async (req, res) => {
 export const getAllTransactions = async (req, res) => {
   try {
     const { page = 1, limit = 10, type, customerId } = req.query;
-    const userId = req.user.id;
+    const storeId = req.storeId;
 
     let query = { 
-      userId,
+      storeId,
       status: { $ne: "cancelled" } 
     };
 
@@ -560,9 +560,9 @@ export const getAllTransactions = async (req, res) => {
 // Get transaction summary for user
 export const getTransactionSummary = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const storeId = req.storeId;
     
-    const summary = await CreditTransaction.getUserSummary(userId);
+    const summary = await CreditTransaction.getStoreSummary(storeId);
     
     res.status(200).json({
       success: true,

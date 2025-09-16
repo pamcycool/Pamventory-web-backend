@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "migrate": "node scripts/migrateExistingUsers.js",
+    "migrate-storeless": "node scripts/migrateStorelessData.js",
+    "migrate-store-based": "node scripts/migrateToStoreBased.js",
+    "vercel-build": "npm install --legacy-peer-deps && npm run build"
   },
   "keywords": [],
   "author": "",
