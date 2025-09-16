@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 // Email transporter configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: "pamventory.com", // mail server (from cPanel)
+    host: "mail.pamventory.com", // mail server (from cPanel)
     port: 465,                         // SSL
     secure: true,                      // true for 465, false for 587
     auth: {

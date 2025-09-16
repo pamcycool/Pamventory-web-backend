@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import https from 'https';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const PAYSTACK_BASE_URL = 'api.paystack.co';
+const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 
 // Helper function to make Paystack API requests
 const paystackRequest = (path, method = 'GET', data = null) => {
