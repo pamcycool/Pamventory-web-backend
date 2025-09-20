@@ -1,19 +1,11 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Email transporter configuration
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: "pamventory.com", // mail server (from cPanel)
-    port: 465,                         // SSL
-    secure: true,                      // true for 465, false for 587
-    auth: {
-      user: process.env.EMAIL_USER,    // e.g. "no-reply@herdomain.com"
-      pass: process.env.EMAIL_PASS     // email account password
-    }
-  });
-};
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -24,11 +16,9 @@ const generateToken = (userId) => {
 
 // Send verification email
 const sendVerificationEmail = async (user, otp) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: user.email,
+  const { data, error } = await resend.emails.send({
+    from: 'PAMVENTORY <no-reply@pamventory.com>',
+    to: [user.email],
     subject: 'Verify Your Email - PAMVENTORY',
     html: `
       <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
@@ -45,19 +35,22 @@ const sendVerificationEmail = async (user, otp) => {
         <p>If you didn't create an account, please ignore this email.</p>
       </div>
     `
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (error) {
+    throw new Error(`Failed to send verification email: ${error.message}`);
+  }
+
+  return data;
 };
 
 // Send reset password email
 const sendResetPasswordEmail = async (user, token) => {
-  const transporter = createTransporter();
   const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: user.email,
+  const { data, error } = await resend.emails.send({
+    from: 'PAMVENTORY <no-reply@pamventory.com>',
+    to: [user.email],
     subject: 'Reset Your Password - PAMVENTORY',
     html: `
       <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
@@ -75,9 +68,13 @@ const sendResetPasswordEmail = async (user, token) => {
         <p>If you didn't request this, please ignore this email.</p>
       </div>
     `
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (error) {
+    throw new Error(`Failed to send reset password email: ${error.message}`);
+  }
+
+  return data;
 };
 
 // Regular signup
