@@ -8,15 +8,16 @@ import salesRoutes from "./routes/salesRoutes.js";
 import creditRoutes from "./routes/creditRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import storeRoutes from "./routes/storeRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const corsOptions = {
-  origin: "*",
+  origin: "https://www.pamventory.com",
   credentials: true,
-  optionSuccessStatus: 200,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -44,6 +45,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/credit", creditRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/admin", adminRoutes);
 // Test endpoint
 app.get("/api/test", (req, res) => {
   res.status(200).json({ message: "API is working!" });
